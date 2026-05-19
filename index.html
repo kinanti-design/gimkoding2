@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="id" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MPI Berpikir Komputasional</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;family=Fredoka+One&amp;display=swap" rel="stylesheet">
+  <style>
+html, body { height: 100%; margin: 0; overflow: hidden; }
+* { font-family: 'Nunito', sans-serif; }
+.fredoka { font-family: 'Fredoka One', cursive; }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(300px) rotate(720deg); opacity: 0; } }
+.animate-fadeInUp { animation: fadeInUp 0.6s ease forwards; }
+.animate-pulse-slow { animation: pulse 2s ease infinite; }
+.animate-float { animation: float 3s ease infinite; }
+.animate-slideIn { animation: slideIn 0.4s ease forwards; }
+.confetti-piece { animation: confetti 2s ease forwards; position: absolute; width: 10px; height: 10px; border-radius: 2px; }
+.btn-hover { transition: transform 0.2s, box-shadow 0.2s; }
+.btn-hover:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+.btn-hover:active { transform: translateY(0); }
+.tab-active { background: #1e40af; color: white; }
+.drag-word { cursor: grab; user-select: none; }
+.drag-word:active { cursor: grabbing; }
+.drop-zone { min-height: 36px; border: 2px dashed #93c5fd; border-radius: 8px; transition: background 0.2s; }
+.drop-zone.over { background: #dbeafe; border-color: #2563eb; }
+.screen { display: none; height: 100%; overflow-y: auto; }
+.screen.active { display: flex; flex-direction: column; }
+input[type="text"] { -webkit-user-select: text; user-select: text; }
+</style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full text-white" style="background-image: url('https://i.imgur.com/wGQFRXw.png'); background-size: cover; background-position: center; background-attachment: fixed; background-repeat: no-repeat;">
+  <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); pointer-events: none;"></div>
+  <div id="app" class="h-full w-full relative overflow-hidden">
+   <!-- HOME BUTTON --> <button id="homeBtn" onclick="goTo('menu')" class="hidden fixed top-3 left-3 z-50 bg-white/20 backdrop-blur-md rounded-full p-2 btn-hover border border-white/30" title="Home"> <i data-lucide="home" class="w-5 h-5 text-white"></i> </button> <!-- SETTINGS BUTTON --> <button id="settingsBtn" onclick="toggleSettings()" class="hidden fixed top-3 right-3 z-50 bg-white/20 backdrop-blur-md rounded-full p-2 btn-hover border border-white/30" title="Pengaturan"> <i data-lucide="settings" class="w-5 h-5 text-white"></i> </button> <!-- SETTINGS PANEL -->
+   <div id="settingsPanel" class="hidden fixed top-14 right-3 z-50 bg-white rounded-xl shadow-2xl p-4 w-64 text-gray-800 animate-slideIn">
+    <h3 class="font-bold text-sm mb-3">🎵 Pengaturan Audio</h3>
+    <div class="flex items-center justify-between mb-3">
+     <span class="text-sm">Musik Latar</span> <button onclick="toggleMusic()" id="musicToggle" class="w-12 h-6 rounded-full bg-blue-500 relative transition-colors"> <span id="musicDot" class="absolute top-0.5 left-6 w-5 h-5 bg-white rounded-full transition-all shadow"></span> </button>
+    </div>
+    <div class="flex items-center justify-between mb-3">
+     <span class="text-sm">Efek Suara</span> <button onclick="toggleSfx()" id="sfxToggle" class="w-12 h-6 rounded-full bg-blue-500 relative transition-colors"> <span id="sfxDot" class="absolute top-0.5 left-6 w-5 h-5 bg-white rounded-full transition-all shadow"></span> </button>
+    </div>
+    <div>
+     <span class="text-sm">Volume</span> <input type="range" min="0" max="100" value="70" oninput="setVolume(this.value)" class="w-full mt-1 accent-blue-500">
+    </div>
+   </div><!-- SPLASH SCREEN -->
+   <div id="splash" class="screen active items-center justify-center text-center p-6">
+    <div class="animate-fadeInUp">
+     <div class="text-6xl mb-4 animate-float">
+      🧠
+     </div>
+     <h1 id="mainTitle" class="fredoka text-4xl md:text-5xl mb-3 drop-shadow-lg">Berpikir Komputasional</h1>
+     <p class="text-blue-100 text-lg mb-2">Media Pembelajaran Interaktif</p>
+     <p class="text-blue-200 text-sm mb-8">Informatika • Kelas X</p><button onclick="playClick();goTo('menu')" class="btn-hover animate-pulse-slow bg-yellow-400 text-blue-900 font-bold px-10 py-4 rounded-full text-xl shadow-lg"> 🚀 MULAI </button>
+     <p class="text-blue-200 text-xs mt-8" id="devCredit">Pengembang: Suci Mega Dian Sari © 2026</p>
+    </div>
+   </div><!-- MENU UTAMA -->
+   <div id="menu" class="screen items-center justify-center p-6">
+    <h2 class="fredoka text-3xl mb-8 drop-shadow">Menu Utama</h2>
+    <div class="grid grid-cols-2 gap-4 w-full max-w-sm">
+     <button onclick="playClick();goTo('beranda')" class="btn-hover bg-white/15 backdrop-blur border border-white/30 rounded-2xl p-6 flex flex-col items-center gap-2 hover:bg-white/25"> <span class="text-3xl">🏠</span><span class="font-bold text-sm">BERANDA</span> </button> <button onclick="playClick();goTo('materi')" class="btn-hover bg-white/15 backdrop-blur border border-white/30 rounded-2xl p-6 flex flex-col items-center gap-2 hover:bg-white/25"> <span class="text-3xl">📚</span><span class="font-bold text-sm">MATERI</span> </button> <button onclick="playClick();goTo('simulasi')" class="btn-hover bg-white/15 backdrop-blur border border-white/30 rounded-2xl p-6 flex flex-col items-center gap-2 hover:bg-white/25"> <span class="text-3xl">🧪</span><span class="font-bold text-sm">SIMULASI</span> </button> <button onclick="playClick();goTo('kuis')" class="btn-hover bg-white/15 backdrop-blur border border-white/30 rounded-2xl p-6 flex flex-col items-center gap-2 hover:bg-white/25"> <span class="text-3xl">🎮</span><span class="font-bold text-sm">KUIS</span> </button>
+    </div>
+   </div><!-- BERANDA -->
+   <div id="beranda" class="screen items-center p-6 pt-14">
+    <div class="max-w-lg w-full bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/20">
+     <h2 class="fredoka text-2xl mb-4 text-center">🏠 Beranda</h2>
+     <div class="space-y-3 text-sm text-blue-50">
+      <div class="bg-white/10 rounded-xl p-4">
+       <h3 class="font-bold text-yellow-300 mb-1">🎯 Tujuan Pembelajaran</h3>
+       <ul class="list-disc list-inside space-y-1 text-xs">
+        <li>Memahami konsep berpikir komputasional dalam menyelesaikan masalah sehari-hari</li>
+        <li>Mengidentifikasi masalah dan memecahkannya menjadi bagian kecil (dekomposisi)</li>
+        <li>Mengenali pola dari permasalahan untuk mempermudah penyelesaian</li>
+       </ul>
+      </div>
+      <div class="bg-white/10 rounded-xl p-4">
+       <h3 class="font-bold text-yellow-300 mb-1">📋 Petunjuk Penggunaan</h3>
+       <ol class="list-decimal list-inside space-y-1 text-xs">
+        <li>Pelajari materi pada menu <b>MATERI</b></li>
+        <li>Uji pemahaman di menu <b>SIMULASI</b></li>
+        <li>Mainkan game edukasi di menu <b>KUIS</b></li>
+        <li>Dapatkan sertifikat setelah menyelesaikan simulasi!</li>
+       </ol>
+      </div>
+      <div class="bg-white/10 rounded-xl p-4">
+       <h3 class="font-bold text-yellow-300 mb-1">👩‍💻 Tentang</h3>
+       <p class="text-xs">Media ini dikembangkan oleh <b>Suci Mega Dian Sari</b> untuk pembelajaran Informatika Kelas X tahun 2026.</p>
+      </div>
+     </div>
+    </div>
+   </div><!-- MATERI -->
+   <div id="materi" class="screen items-center p-6 pt-14">
+    <div class="max-w-lg w-full">
+     <h2 class="fredoka text-2xl mb-4 text-center">📚 Materi</h2>
+     <div class="flex gap-1 mb-4 flex-wrap justify-center" id="materiTabs"></div>
+     <div id="materiContent" class="bg-white/10 backdrop-blur rounded-2xl p-5 border border-white/20 text-sm text-blue-50 min-h-[200px]"></div>
+    </div>
+   </div><!-- SIMULASI -->
+   <div id="simulasi" class="screen items-center p-6 pt-14">
+    <div class="max-w-lg w-full" id="simulasiContainer"></div>
+   </div><!-- KUIS -->
+   <div id="kuis" class="screen items-center p-6 pt-14">
+    <div class="max-w-lg w-full" id="kuisContainer"></div>
+   </div><!-- SERTIFIKAT -->
+   <div id="sertifikat" class="screen items-center justify-center p-6">
+    <div id="certCard" class="bg-white rounded-3xl p-8 text-center max-w-md w-full shadow-2xl relative overflow-hidden">
+     <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-yellow-400 to-blue-500"></div>
+     <div class="text-5xl mb-3">
+      🏆
+     </div>
+     <h2 class="fredoka text-blue-900 text-2xl mb-1">Sertifikat Pencapaian</h2>
+     <p class="text-gray-500 text-xs mb-4">Media Pembelajaran Berpikir Komputasional</p>
+     <p class="text-gray-600 text-sm">Diberikan kepada:</p>
+     <p id="certName" class="fredoka text-blue-700 text-xl my-2"></p>
+     <p class="text-gray-500 text-xs">Telah menyelesaikan Simulasi Uji Pemahaman</p>
+     <p class="text-gray-500 text-xs">dengan skor: <span id="certScore" class="font-bold text-blue-600"></span></p>
+     <div class="mt-4 pt-4 border-t border-gray-200">
+      <p class="text-gray-400 text-xs">Suci Mega Dian Sari • 2026</p>
+     </div><button onclick="playClick();goTo('menu')" class="mt-4 btn-hover bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold">Kembali ke Menu</button>
+    </div>
+   </div>
+  </div>
+  <script>
+// ===== AUDIO SYSTEM =====
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+let musicOn = true, sfxOn = true, volume = 0.7;
+let musicOsc, musicGain;
+
+function ensureAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playClick() {
+  if (!sfxOn) return;
+  ensureAudioCtx();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.frequency.setValueAtTime(800, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.05);
+  g.gain.setValueAtTime(volume * 0.3, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+  o.start(); o.stop(audioCtx.currentTime + 0.1);
+}
+
+function playCorrect() {
+  if (!sfxOn) return;
+  ensureAudioCtx();
+  [523, 659, 784].forEach((f, i) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.frequency.value = f;
+    g.gain.setValueAtTime(volume * 0.2, audioCtx.currentTime + i * 0.12);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.12 + 0.2);
+    o.start(audioCtx.currentTime + i * 0.12);
+    o.stop(audioCtx.currentTime + i * 0.12 + 0.2);
+  });
+}
+
+function playWrong() {
+  if (!sfxOn) return;
+  ensureAudioCtx();
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = 'sawtooth';
+  o.frequency.value = 200;
+  g.gain.setValueAtTime(volume * 0.2, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+  o.start(); o.stop(audioCtx.currentTime + 0.3);
+}
+
+function startMusic() {
+  if (!musicOn) return;
+  ensureAudioCtx();
+  if (musicOsc) return;
+  musicGain = audioCtx.createGain();
+  musicGain.gain.value = volume * 0.08;
+  musicGain.connect(audioCtx.destination);
+  musicOsc = audioCtx.createOscillator();
+  musicOsc.type = 'sine';
+  musicOsc.frequency.value = 261;
+  const lfo = audioCtx.createOscillator();
+  const lfoGain = audioCtx.createGain();
+  lfo.frequency.value = 0.5;
+  lfoGain.gain.value = 30;
+  lfo.connect(lfoGain);
+  lfoGain.connect(musicOsc.frequency);
+  lfo.start();
+  musicOsc.connect(musicGain);
+  musicOsc.start();
+}
+
+function stopMusic() {
+  if (musicOsc) { musicOsc.stop(); musicOsc = null; musicGain = null; }
+}
+
+function toggleMusic() {
+  musicOn = !musicOn;
+  document.getElementById('musicToggle').className = `w-12 h-6 rounded-full ${musicOn ? 'bg-blue-500' : 'bg-gray-300'} relative transition-colors`;
+  document.getElementById('musicDot').style.left = musicOn ? '24px' : '2px';
+  if (musicOn) startMusic(); else stopMusic();
+}
+
+function toggleSfx() {
+  sfxOn = !sfxOn;
+  document.getElementById('sfxToggle').className = `w-12 h-6 rounded-full ${sfxOn ? 'bg-blue-500' : 'bg-gray-300'} relative transition-colors`;
+  document.getElementById('sfxDot').style.left = sfxOn ? '24px' : '2px';
+}
+
+function setVolume(v) {
+  volume = v / 100;
+  if (musicGain) musicGain.gain.value = volume * 0.08;
+}
+
+function toggleSettings() {
+  const p = document.getElementById('settingsPanel');
+  p.classList.toggle('hidden');
+}
+
+// ===== NAVIGATION =====
+let currentScreen = 'splash';
+let studentName = '';
+
+function goTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screen).classList.add('active');
+  currentScreen = screen;
+  const showNav = screen !== 'splash';
+  document.getElementById('homeBtn').classList.toggle('hidden', !showNav);
+  document.getElementById('settingsBtn').classList.toggle('hidden', !showNav);
+  document.getElementById('settingsPanel').classList.add('hidden');
+  if (screen === 'menu') startMusic();
+  if (screen === 'materi') renderMateri(0);
+  if (screen === 'simulasi') renderSimulasi();
+  if (screen === 'kuis') renderKuisMenu();
+}
+
+// ===== MATERI =====
+const materiData = [
+  { title: "Pengantar", content: `<h3 class="font-bold text-yellow-300 text-base mb-2">Apa itu Berpikir Komputasional?</h3><p class="mb-2">Berpikir komputasional adalah proses pemecahan masalah yang melibatkan pemikiran logis dan terstruktur, mirip cara komputer memproses informasi.</p><p>Empat pilar utama:</p><ul class="list-disc list-inside mt-2 space-y-1"><li><b>Dekomposisi</b> - memecah masalah besar</li><li><b>Pengenalan Pola</b> - menemukan kesamaan</li><li><b>Abstraksi</b> - fokus pada hal penting</li><li><b>Algoritma</b> - langkah penyelesaian</li></ul>` },
+  { title: "Dekomposisi", content: `<h3 class="font-bold text-yellow-300 text-base mb-2">Dekomposisi</h3><p class="mb-2">Dekomposisi adalah memecah masalah kompleks menjadi bagian-bagian kecil yang lebih mudah ditangani.</p><div class="bg-white/10 rounded-lg p-3 my-3"><b>Contoh:</b> Membuat nasi goreng 🍳<br><span class="text-xs">1. Siapkan bahan → 2. Panaskan wajan → 3. Tumis bumbu → 4. Masukkan nasi → 5. Aduk rata → 6. Sajikan</span></div><p class="text-xs">Setiap langkah kecil lebih mudah dipahami dan dikerjakan!</p>` },
+  { title: "Pola", content: `<h3 class="font-bold text-yellow-300 text-base mb-2">Pengenalan Pola</h3><p class="mb-2">Pengenalan pola adalah menemukan kesamaan atau keteraturan dalam data atau masalah.</p><div class="bg-white/10 rounded-lg p-3 my-3"><b>Contoh pola:</b><br>2, 4, 6, 8, ... → <span class="text-yellow-300">pola: +2</span><br>🔴🔵🔴🔵🔴... → <span class="text-yellow-300">pola: bergantian</span></div><p class="text-xs">Mengenali pola membantu kita memprediksi dan menyelesaikan masalah lebih cepat.</p>` },
+  { title: "Abstraksi", content: `<h3 class="font-bold text-yellow-300 text-base mb-2">Abstraksi</h3><p class="mb-2">Abstraksi adalah menyederhanakan masalah dengan membuang detail yang tidak relevan dan fokus pada informasi penting.</p><div class="bg-white/10 rounded-lg p-3 my-3"><b>Contoh:</b> Peta<br><span class="text-xs">Peta tidak menampilkan semua detail dunia nyata, hanya jalan dan lokasi penting yang kita butuhkan.</span></div>` },
+  { title: "Algoritma", content: `<h3 class="font-bold text-yellow-300 text-base mb-2">Algoritma</h3><p class="mb-2">Algoritma adalah urutan langkah-langkah logis untuk menyelesaikan masalah.</p><div class="bg-white/10 rounded-lg p-3 my-3"><b>Contoh:</b> Menyeberang jalan<br><span class="text-xs">1. Berdiri di tepi jalan<br>2. Lihat kiri → 3. Lihat kanan<br>4. Jika aman → Jalan<br>5. Jika tidak → Tunggu, ulangi langkah 2</span></div>` }
+];
+
+function renderMateri(idx) {
+  const tabs = document.getElementById('materiTabs');
+  tabs.innerHTML = materiData.map((m, i) => `<button onclick="playClick();renderMateri(${i})" class="px-3 py-1 rounded-full text-xs font-bold transition ${i === idx ? 'tab-active' : 'bg-white/20 hover:bg-white/30'}">${m.title}</button>`).join('');
+  document.getElementById('materiContent').innerHTML = materiData[idx].content;
+}
+
+// ===== SIMULASI =====
+const simulasiQuestions = [
+  { type: 'pg', q: 'Apa pilar pertama berpikir komputasional yang memecah masalah menjadi bagian kecil?', opts: ['Abstraksi', 'Dekomposisi', 'Algoritma', 'Pola'], ans: 1 },
+  { type: 'pg', q: 'Mana yang merupakan contoh pengenalan pola?', opts: ['Membuat daftar belanja', 'Menemukan angka berikutnya: 2,4,6,...', 'Menggambar peta', 'Menulis cerita'], ans: 1 },
+  { type: 'pg', q: 'Algoritma adalah...', opts: ['Bahasa pemrograman', 'Urutan langkah logis', 'Jenis komputer', 'Nama aplikasi'], ans: 1 },
+  { type: 'drag', q: 'Lengkapi: _____ adalah memecah masalah besar menjadi bagian kecil.', words: ['Abstraksi', 'Dekomposisi', 'Algoritma'], ans: 'Dekomposisi' },
+  { type: 'drag', q: 'Lengkapi: Peta adalah contoh dari _____.', words: ['Dekomposisi', 'Pola', 'Abstraksi'], ans: 'Abstraksi' },
+  { type: 'pg', q: 'Manakah yang BUKAN pilar berpikir komputasional?', opts: ['Dekomposisi', 'Kompilasi', 'Abstraksi', 'Pengenalan Pola'], ans: 1 },
+  { type: 'mark', q: 'Klik kata yang merupakan pilar berpikir komputasional:', words: ['Dekomposisi', 'Komputer', 'Monitor', 'Algoritma', 'Keyboard'], ans: ['Dekomposisi', 'Algoritma'] },
+  { type: 'pg', q: 'Resep masakan adalah contoh dari...', opts: ['Dekomposisi', 'Algoritma', 'Abstraksi', 'Pola'], ans: 1 },
+  { type: 'mark', q: 'Pilih yang merupakan contoh dekomposisi:', words: ['Memecah tugas', 'Melihat warna', 'Langkah-langkah kecil', 'Bermain game', 'Bagian terpisah'], ans: ['Memecah tugas', 'Langkah-langkah kecil', 'Bagian terpisah'] },
+  { type: 'drag', q: 'Lengkapi: Menemukan keteraturan dalam data disebut pengenalan _____.', words: ['Abstraksi', 'Pola', 'Langkah'], ans: 'Pola' }
+];
+
+let simIdx = 0, simScore = 0, simAnswered = false;
+
+function renderSimulasi() {
+  simIdx = 0; simScore = 0;
+  const c = document.getElementById('simulasiContainer');
+  c.innerHTML = `
+    <h2 class="fredoka text-2xl mb-4 text-center">🧪 Simulasi</h2>
+    <div class="bg-white/10 backdrop-blur rounded-2xl p-5 border border-white/20 mb-4">
+      <p class="text-sm text-blue-100 mb-3">Masukkan nama untuk sertifikat:</p>
+      <input type="text" id="simNameInput" placeholder="Nama lengkap..." class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-blue-200 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
+      <button onclick="startSimulasi()" class="btn-hover mt-3 w-full bg-yellow-400 text-blue-900 font-bold py-3 rounded-xl">Mulai Simulasi</button>
+    </div>`;
+}
+
+function startSimulasi() {
+  const name = document.getElementById('simNameInput').value.trim();
+  if (!name) { document.getElementById('simNameInput').focus(); return; }
+  studentName = name;
+  playClick();
+  showSimQuestion();
+}
+
+function showSimQuestion() {
+  if (simIdx >= simulasiQuestions.length) { finishSimulasi(); return; }
+  simAnswered = false;
+  const q = simulasiQuestions[simIdx];
+  const c = document.getElementById('simulasiContainer');
+  let html = `<div class="flex justify-between items-center mb-3"><h3 class="fredoka text-lg">Soal ${simIdx + 1}/10</h3><span class="text-xs bg-white/20 px-2 py-1 rounded-full">Skor: ${simScore}</span></div>`;
+  html += `<div class="bg-white/10 backdrop-blur rounded-2xl p-5 border border-white/20">`;
+  html += `<p class="text-sm font-semibold mb-4">${q.q}</p>`;
+
+  if (q.type === 'pg') {
+    html += q.opts.map((o, i) => `<button onclick="answerSim('pg',${i})" id="simOpt${i}" class="btn-hover w-full text-left px-4 py-3 mb-2 rounded-xl bg-white/10 border border-white/20 text-sm hover:bg-white/20 transition">${o}</button>`).join('');
+  } else if (q.type === 'drag') {
+    html += `<div id="simDropZone" class="drop-zone flex items-center justify-center px-4 py-2 mb-4 text-sm text-blue-200" ondrop="dropSim(event)" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')">Taruh jawaban di sini</div>`;
+    html += `<div class="flex gap-2 flex-wrap">${q.words.map(w => `<span draggable="true" ondragstart="event.dataTransfer.setData('text','${w}')" class="drag-word bg-yellow-400 text-blue-900 px-3 py-1 rounded-full text-sm font-bold">${w}</span>`).join('')}</div>`;
+  } else if (q.type === 'mark') {
+    html += `<div class="flex gap-2 flex-wrap" id="markWords">${q.words.map(w => `<button onclick="markWord(this,'${w}')" class="px-3 py-1 rounded-full text-sm font-bold bg-white/20 border border-white/30 transition">${w}</button>`).join('')}</div>`;
+    html += `<button onclick="checkMark()" class="btn-hover mt-4 bg-yellow-400 text-blue-900 font-bold px-6 py-2 rounded-full text-sm">Periksa</button>`;
+  }
+  html += `</div><div id="simFeedback" class="mt-3 text-center text-sm"></div>`;
+  c.innerHTML = html;
+}
+
+function answerSim(type, val) {
+  if (simAnswered) return;
+  simAnswered = true;
+  const q = simulasiQuestions[simIdx];
+  const correct = val === q.ans;
+  if (correct) { simScore++; playCorrect(); } else { playWrong(); }
+  for (let i = 0; i < q.opts.length; i++) {
+    const btn = document.getElementById('simOpt' + i);
+    if (i === q.ans) btn.classList.add('bg-green-500/40', 'border-green-400');
+    else if (i === val) btn.classList.add('bg-red-500/40', 'border-red-400');
+    btn.setAttribute('disabled', true);
+  }
+  document.getElementById('simFeedback').innerHTML = correct ? '✅ Benar!' : '❌ Salah. Jawaban: ' + q.opts[q.ans];
+  setTimeout(() => { simIdx++; showSimQuestion(); }, 1500);
+}
+
+function dropSim(e) {
+  e.preventDefault();
+  if (simAnswered) return;
+  simAnswered = true;
+  const val = e.dataTransfer.getData('text');
+  const q = simulasiQuestions[simIdx];
+  const zone = document.getElementById('simDropZone');
+  zone.classList.remove('over');
+  zone.textContent = val;
+  const correct = val === q.ans;
+  if (correct) { simScore++; playCorrect(); zone.classList.add('bg-green-500/30'); }
+  else { playWrong(); zone.classList.add('bg-red-500/30'); }
+  document.getElementById('simFeedback').innerHTML = correct ? '✅ Benar!' : '❌ Salah. Jawaban: ' + q.ans;
+  setTimeout(() => { simIdx++; showSimQuestion(); }, 1500);
+}
+
+let markedWords = [];
+function markWord(btn, word) {
+  if (simAnswered) return;
+  playClick();
+  if (markedWords.includes(word)) {
+    markedWords = markedWords.filter(w => w !== word);
+    btn.classList.remove('bg-yellow-400', 'text-blue-900');
+    btn.classList.add('bg-white/20');
+  } else {
+    markedWords.push(word);
+    btn.classList.add('bg-yellow-400', 'text-blue-900');
+    btn.classList.remove('bg-white/20');
+  }
+}
+
+function checkMark() {
+  if (simAnswered) return;
+  simAnswered = true;
+  const q = simulasiQuestions[simIdx];
+  const correct = q.ans.length === markedWords.length && q.ans.every(a => markedWords.includes(a));
+  if (correct) { simScore++; playCorrect(); } else { playWrong(); }
+  document.getElementById('simFeedback').innerHTML = correct ? '✅ Benar!' : '❌ Salah. Jawaban: ' + q.ans.join(', ');
+  markedWords = [];
+  setTimeout(() => { simIdx++; showSimQuestion(); }, 1500);
+}
+
+async function finishSimulasi() {
+  const c = document.getElementById('simulasiContainer');
+  c.innerHTML = `<div class="text-center"><div class="text-4xl mb-3">🎉</div><h3 class="fredoka text-xl mb-2">Simulasi Selesai!</h3><p class="text-sm mb-1">Nama: ${studentName}</p><p class="text-sm mb-4">Skor: ${simScore}/10</p><button onclick="playClick();showCert()" class="btn-hover bg-yellow-400 text-blue-900 font-bold px-8 py-3 rounded-full">Lihat Sertifikat 🏆</button></div>`;
+  // Save to Canva Sheet
+  if (window.dataSdk) {
+    await window.dataSdk.create({ nama_siswa: studentName, skor_simulasi: simScore, tanggal: new Date().toISOString() });
+  }
+}
+
+function showCert() {
+  document.getElementById('certName').textContent = studentName;
+  document.getElementById('certScore').textContent = simScore + '/10';
+  goTo('sertifikat');
+  // confetti
+  const card = document.getElementById('certCard');
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = '-10px';
+    p.style.background = ['#fbbf24','#3b82f6','#ef4444','#10b981','#8b5cf6'][Math.floor(Math.random()*5)];
+    p.style.animationDelay = Math.random() * 0.5 + 's';
+    card.appendChild(p);
+    setTimeout(() => p.remove(), 2500);
+  }
+}
+
+// ===== KUIS (4 GAMES) =====
+const games = [
+  { name: "Tebak Pilar", icon: "🧩", desc: "Tebak pilar dari deskripsi" },
+  { name: "Urutkan Langkah", icon: "📝", desc: "Susun algoritma yang benar" },
+  { name: "Pola Angka", icon: "🔢", desc: "Temukan pola berikutnya" },
+  { name: "Dekomposisi", icon: "✂️", desc: "Pecahkan masalah" }
+];
+
+function renderKuisMenu() {
+  const c = document.getElementById('kuisContainer');
+  c.innerHTML = `<h2 class="fredoka text-2xl mb-4 text-center">🎮 Kuis</h2><div class="grid grid-cols-2 gap-3">${games.map((g, i) => `<button onclick="playClick();startGame(${i})" class="btn-hover bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-4 text-center hover:bg-white/20"><div class="text-3xl mb-1">${g.icon}</div><div class="font-bold text-xs">${g.name}</div><div class="text-[10px] text-blue-200">${g.desc}</div></button>`).join('')}</div>`;
+}
+
+// Game 1: Tebak Pilar
+const g1Data = [
+  { q: "Memecah masalah besar menjadi bagian kecil", a: "Dekomposisi" },
+  { q: "Menemukan kesamaan atau keteraturan", a: "Pengenalan Pola" },
+  { q: "Menyederhanakan dengan membuang detail tak penting", a: "Abstraksi" },
+  { q: "Urutan langkah logis untuk solusi", a: "Algoritma" },
+  { q: "Memisahkan resep menjadi langkah-langkah", a: "Dekomposisi" }
+];
+
+// Game 2: Urutkan Langkah
+const g2Data = [
+  { q: "Menyeberang jalan", steps: ["Berdiri di tepi","Lihat kiri-kanan","Pastikan aman","Berjalan menyeberang","Sampai di seberang"] },
+  { q: "Membuat teh", steps: ["Siapkan gelas","Masukkan teh celup","Tuang air panas","Tunggu 2 menit","Angkat teh celup"] },
+  { q: "Login aplikasi", steps: ["Buka aplikasi","Masukkan username","Masukkan password","Klik login","Masuk beranda"] },
+  { q: "Bangun pagi", steps: ["Alarm berbunyi","Matikan alarm","Duduk di kasur","Berdiri","Ke kamar mandi"] },
+  { q: "Kirim email", steps: ["Buka email","Klik compose","Tulis pesan","Isi alamat tujuan","Klik kirim"] }
+];
+
+// Game 3: Pola Angka
+const g3Data = [
+  { seq: [2,4,6,8], ans: 10 },
+  { seq: [1,3,9,27], ans: 81 },
+  { seq: [5,10,15,20], ans: 25 },
+  { seq: [1,1,2,3,5], ans: 8 },
+  { seq: [100,90,80,70], ans: 60 }
+];
+
+// Game 4: Dekomposisi
+const g4Data = [
+  { task: "Membuat website", parts: ["Desain layout","Tulis HTML","Tambah CSS","Tulis JavaScript","Deploy"], wrong: ["Main game","Tidur"] },
+  { task: "Merencanakan pesta", parts: ["Tentukan tanggal","Buat undangan","Pesan makanan","Dekorasi ruangan","Sambut tamu"], wrong: ["Cuci baju","Baca buku"] },
+  { task: "Belajar untuk ujian", parts: ["Baca materi","Buat ringkasan","Latihan soal","Review jawaban","Istirahat cukup"], wrong: ["Main HP","Nonton TV"] },
+  { task: "Membuat video", parts: ["Tulis skrip","Siapkan alat","Rekam video","Edit video","Upload"], wrong: ["Masak","Olahraga"] },
+  { task: "Presentasi kelas", parts: ["Riset topik","Buat slide","Latihan bicara","Persiapan alat","Presentasi"], wrong: ["Belanja","Jalan-jalan"] }
+];
+
+let gameLevel = 0, gameScore = 0;
+
+function startGame(idx) {
+  gameLevel = 0; gameScore = 0;
+  if (idx === 0) renderGame1();
+  else if (idx === 1) renderGame2();
+  else if (idx === 2) renderGame3();
+  else renderGame4();
+}
+
+function renderGame1() {
+  if (gameLevel >= g1Data.length) { showGameResult("Tebak Pilar"); return; }
+  const d = g1Data[gameLevel];
+  const opts = ["Dekomposisi","Pengenalan Pola","Abstraksi","Algoritma"];
+  const c = document.getElementById('kuisContainer');
+  c.innerHTML = `<div class="flex justify-between items-center mb-3"><h3 class="fredoka text-lg">🧩 Level ${gameLevel+1}/5</h3><span class="text-xs bg-white/20 px-2 py-1 rounded-full">⭐ ${gameScore}</span></div><div class="bg-white/10 backdrop-blur rounded-2xl p-5 border border-white/20"><p class="text-sm font-semibold mb-4">"${d.q}"</p><p class="text-xs text-blue-200 mb-3">Pilar apa ini?</p>${opts.map(o => `<button onclick="checkG1('${o}')" class="btn-hover w-full text-left px-4 py-2 mb-2 rounded-xl bg-white/10 border border-white/20 text-sm hover:bg-white/20">${o}</button>`).join('')}</div><div id="gFeedback" class="mt-3 text-center text-sm"></div>`;
+}
+
+function checkG1(ans) {
+  const correct = ans === g1Data[gameLevel].a;
+  if (correct) { gameScore++; playCorrect(); } else { playWrong(); }
+  document.getElementById('gFeedback').innerHTML = correct ? '✅ Benar!' : '❌ Jawaban: ' + g1Data[gameLevel].a;
+  setTimeout(() => { gameLevel++; renderGame1(); }, 1200);
+}
+
+function renderGame2() {
+  if (gameLevel >= g2Data.length) { showGameResult("Urutkan Langkah"); return; }
+  const d = g2Data[gameLevel];
+  const shuffled = [...d.steps].sort(() => Math.random() - 0.5);
+  const c = document.getElementById('kuisContainer');
+  c.innerHTML = `<div class="flex justify-between items-center mb-3"><h3 class="fredoka text-lg">📝 Level ${gameLevel+1}/5</h3><span class="text-xs bg-white/20 px-2 py-1 rounded-full">⭐ ${gameScore}</span></div><div class="bg-white/10 backdrop-blur rounded-2xl p-5 border border-white/20"><p class="text-sm font-semibold mb-3">Urutkan: "${d.q}"</p><div id="sortList" class="space-y-2">${shuffled.map((s,i) => `<div draggable="true" data-val="${s}" class="drag-word bg-white/15 border border-white/20 px-3 py-2 rounded-lg text-sm flex items-center gap-2"><span class="text-xs text-blue-300">${i+1}.</span>${s}</div>`).join('')}</div><button onclick="checkG2()" class="btn-hover mt-4 w-full bg-yellow-400 text-blue-900 font-bold py-2 rounded-xl text-sm">Periksa Urutan</button></div><div id="gFeedback" class="mt-3 text-center text-sm"></div>`;
+  // Simple sort by click to move up
+  const list = document.getElementById('sortList');
+  list.addEventListener('click', e => {
+    const item = e.target.closest('[draggable]');
+    if (item && item.previousElementSibling) {
+      playClick();
+      list.insertBefore(item, item.previousElementSibling);
+      [...list.children].forEach((ch, i) => ch.querySelector('span').textContent = (i+1) + '.');
+    }
+  });
+}
+
+function checkG2() {
+  const items = [...document.getElementById('sortList').children].map(el => el.dataset.val);
+  const correct = items.every((v, i) => v === g2Data[gameLevel].steps[i]);
+  if (correct) { gameScore++; playCorrect(); } else { playWrong(); }
+  document.getElementById('gFeedback').innerHTML = correct ? '✅ Urutan benar!' : '❌ Urutan yang benar: ' + g2Data[gameLevel].steps.map((s,i) => (i+1)+'. '+s).join(', ');
+  setTimeout(() => { gameLevel++; renderGame2(); }, 2000);
+}
+
+function renderGame3() {
+  if (gameLevel >= g3Data.length) { showGameResult("Pola Angka"); return; }
+  const d = g3Data[gameLevel];
+  const c = document.getElementById('kuisContainer');
+  c.innerHTML = `<div class="flex justify-between items-center mb-3"><h3 class="fredoka text-lg">🔢 Level ${gameLevel+1}/5</h3><span class="text-xs bg-white/20 px-2 py-1 rounded-full">⭐ ${gameScore}</span></div><div class="bg-white/10 backdrop-blur rounded-2xl p-5 border border-white/20"><p class="text-sm font-semibold mb-3">Temukan angka berikutnya:</p><div class="flex gap-2 items-center mb-4 flex-wrap"><span class="bg-blue-500 px-3 py-1 rounded-lg font-bold">${d.seq.join('</span><span class="bg-blue-500 px-3 py-1 rounded-lg font-bold">')}</span><span class="text-2xl">?</span></div><input type="text" id="g3Input" class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" placeholder="Jawaban..." autocomplete="off"><button onclick="checkG3()" class="btn-hover mt-3 w-full bg-yellow-400 text-blue-900 font-bold py-2 rounded-xl text-sm">Jawab</button></div><div id="gFeedback" class="mt-3 text-center text-sm"></div>`;
+}
+
+function checkG3() {
+  const val = parseInt(document.getElementById('g3Input').value);
+  const correct = val === g3Data[gameLevel].ans;
+  if (correct) { gameScore++; playCorrect(); } else { playWrong(); }
+  document.getElementById('gFeedback').innerHTML = correct ? '✅ Benar!' : '❌ Jawaban: ' + g3Data[gameLevel].ans;
+  setTimeout(() => { gameLevel++; renderGame3(); }, 1200);
+}
+
+function renderGame4() {
+  if (gameLevel >= g4Data.length) { showGameResult("Dekomposisi"); return; }
+  const d = g4Data[gameLevel];
+  const allParts = [...d.parts, ...d.wrong].sort(() => Math.random() - 0.5);
+  const c = document.getElementById('kuisContainer');
+  c.innerHTML = `<div class="flex justify-between items-center mb-3"><h3 class="fredoka text-lg">✂️ Level ${gameLevel+1}/5</h3><span class="text-xs bg-white/20 px-2 py-1 rounded-full">⭐ ${gameScore}</span></div><div class="bg-white/10 backdrop-blur rounded-2xl p-5 border border-white/20"><p class="text-sm font-semibold mb-1">Dekomposisi: "${d.task}"</p><p class="text-xs text-blue-200 mb-3">Pilih langkah yang relevan:</p><div id="g4opts" class="flex flex-wrap gap-2">${allParts.map(p => `<button onclick="toggleG4(this)" data-val="${p}" class="px-3 py-1 rounded-full text-xs font-bold bg-white/20 border border-white/30 transition">${p}</button>`).join('')}</div><button onclick="checkG4()" class="btn-hover mt-4 w-full bg-yellow-400 text-blue-900 font-bold py-2 rounded-xl text-sm">Periksa</button></div><div id="gFeedback" class="mt-3 text-center text-sm"></div>`;
+}
+
+function toggleG4(btn) {
+  playClick();
+  btn.classList.toggle('bg-yellow-400');
+  btn.classList.toggle('text-blue-900');
+  btn.classList.toggle('bg-white/20');
+}
+
+function checkG4() {
+  const selected = [...document.querySelectorAll('#g4opts button.bg-yellow-400')].map(b => b.dataset.val);
+  const d = g4Data[gameLevel];
+  const correct = d.parts.length === selected.length && d.parts.every(p => selected.includes(p));
+  if (correct) { gameScore++; playCorrect(); } else { playWrong(); }
+  document.getElementById('gFeedback').innerHTML = correct ? '✅ Benar!' : '❌ Langkah yang benar: ' + d.parts.join(', ');
+  setTimeout(() => { gameLevel++; renderGame4(); }, 2000);
+}
+
+function showGameResult(name) {
+  const c = document.getElementById('kuisContainer');
+  c.innerHTML = `<div class="text-center bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/20"><div class="text-4xl mb-3">🎉</div><h3 class="fredoka text-xl mb-2">${name} Selesai!</h3><p class="text-sm mb-4">Skor: ⭐ ${gameScore}/5</p><button onclick="playClick();renderKuisMenu()" class="btn-hover bg-yellow-400 text-blue-900 font-bold px-6 py-2 rounded-full text-sm">Kembali ke Kuis</button></div>`;
+}
+
+// ===== SDK INIT =====
+const defaultConfig = {
+  judul_utama: 'Berpikir Komputasional',
+  nama_pengembang: 'Suci Mega Dian Sari',
+  background_color: '#1e3a8a',
+  surface_color: '#1e40af',
+  text_color: '#ffffff',
+  accent_color: '#fbbf24',
+  secondary_action_color: '#3b82f6',
+  font_family: 'Nunito',
+  font_size: 16
+};
+
+function applyConfig(config) {
+  const t = config.judul_utama || defaultConfig.judul_utama;
+  const d = config.nama_pengembang || defaultConfig.nama_pengembang;
+  document.getElementById('mainTitle').textContent = t;
+  document.getElementById('devCredit').textContent = `Pengembang: ${d} © 2026`;
+
+  const font = config.font_family || defaultConfig.font_family;
+  const size = config.font_size || defaultConfig.font_size;
+  document.body.style.fontFamily = `${font}, Nunito, sans-serif`;
+  document.body.style.fontSize = size + 'px';
+
+  const bg = config.background_color || defaultConfig.background_color;
+  const accent = config.accent_color || defaultConfig.accent_color;
+  const text = config.text_color || defaultConfig.text_color;
+  document.body.style.color = text;
+  document.querySelectorAll('.fredoka').forEach(el => el.style.color = text);
+}
+
+window.elementSdk.init({
+  defaultConfig,
+  onConfigChange: async (config) => { applyConfig(config); },
+  mapToCapabilities: (config) => ({
+    recolorables: [
+      { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); }},
+      { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }},
+      { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); }},
+      { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); }},
+      { get: () => config.secondary_action_color || defaultConfig.secondary_action_color, set: (v) => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); }}
+    ],
+    borderables: [],
+    fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }},
+    fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }}
+  }),
+  mapToEditPanelValues: (config) => new Map([
+    ["judul_utama", config.judul_utama || defaultConfig.judul_utama],
+    ["nama_pengembang", config.nama_pengembang || defaultConfig.nama_pengembang]
+  ])
+});
+
+// Data SDK init
+if (window.dataSdk) {
+  window.dataSdk.init({
+    onDataChanged(data) { /* read not needed for display */ }
+  });
+}
+
+lucide.createIcons();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9fe0199173aabc78',t:'MTc3OTE2MjIzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
